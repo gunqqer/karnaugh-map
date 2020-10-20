@@ -9,3 +9,4 @@
 *.toc
 test/actual
 test/result
+*.bak
