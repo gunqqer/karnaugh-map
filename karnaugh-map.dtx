@@ -100,10 +100,91 @@
 %% drawing
 \RequirePackage{tikz}
 \usetikzlibrary{calc,matrix}
+\RequirePackage{luacode}
 
 %%
 %% Helpers
 %%
+
+\begin{luacode*}
+ function decimalToBin(num, numb_bits)
+    num = tonumber(num)
+    numb_bits = tonumber(numb_bits)
+    local t={}
+    for b=numb_bits,1,-1 do
+        rest=math.floor(math.fmod(num,2))
+        t[b]=rest
+        num=(num-rest)/2
+    end
+    return table.concat(t)
+ end
+ 
+ function decimalToGreyBin(num, numb_bits)
+    num = tonumber(num)
+    numb_bits = tonumber(numb_bits)
+    local t={}
+    for b=numb_bits,1,-1 do
+        rest=math.floor(math.fmod(num,2))
+        t[b]=rest
+        num=(num-rest)/2
+    end
+    local tg={}
+    for b=1,numb_bits,1 do
+        if b == 1 then 
+            tg[b] = t[b]
+        else
+            tg[b] = t[b] ~ t[b-1]
+        end
+    end
+    return table.concat(tg)
+ end
+ 
+ function generateKMap(row, column)
+    local outside_column_bits = 1
+    local outside_row_bits = 1
+    if row >= 4 then
+        outside_row_bits = 2
+    end
+    if column >= 4 then
+        outside_column_bits = 2
+    end
+    for c=0,column+1,1 do
+        for r=0,row+1,1 do
+            if r == 0 then
+                if c == 0 then
+                    
+                elseif c == (column+1) then
+                    tex.sprint("\\phantom{", decimalToBin(0, outside_column_bits), "}")
+                else
+                    tex.sprint(decimalToGreyBin(c-1, outside_column_bits))
+                end
+            elseif r==(row+1) then
+                if c==0 then
+                    tex.sprint("\\phantom{", decimalToBin(0, outside_column_bits), "}")
+                end
+            else
+                if c == 0 then
+                    tex.sprint(decimalToGreyBin(r-1, outside_row_bits))
+                elseif c == (column+1) then
+                    
+                else
+                    tex.sprint("|(","00",
+                    decimalToGreyBin((c-1), 2),
+                    decimalToGreyBin((r-1), 2), ")|","\\phantom{0}")
+                    -- %TODO: Look into why reversing c and r from where they should be makes it work
+                end
+            end
+            
+            if r == (row+1) then
+                tex.sprint("\\\\")
+            else
+                tex.sprint("\\&")
+            end
+        end
+    end
+ end
+\end{luacode*}
+
 
 %% convert decimal to color
 \newcommand{\@karnaughmap@func@decimaltocolor@}[1]{%
@@ -117,72 +198,7 @@
 }
 
 %% convert decimal to binary 6-bit
-\newcommand{\@karnaughmap@func@decimaltobin@}[1]{%
-  \ifnum#1=0 000000\fi
-  \ifnum#1=1 000001\fi
-  \ifnum#1=2 000010\fi
-  \ifnum#1=3 000011\fi
-  \ifnum#1=4 000100\fi
-  \ifnum#1=5 000101\fi
-  \ifnum#1=6 000110\fi
-  \ifnum#1=7 000111\fi
-  \ifnum#1=8 001000\fi
-  \ifnum#1=9 001001\fi
-  \ifnum#1=10 001010\fi
-  \ifnum#1=11 001011\fi
-  \ifnum#1=12 001100\fi
-  \ifnum#1=13 001101\fi
-  \ifnum#1=14 001110\fi
-  \ifnum#1=15 001111\fi
-  \ifnum#1=16 010000\fi
-  \ifnum#1=17 010001\fi
-  \ifnum#1=18 010010\fi
-  \ifnum#1=19 010011\fi
-  \ifnum#1=20 010100\fi
-  \ifnum#1=21 010101\fi
-  \ifnum#1=22 010110\fi
-  \ifnum#1=23 010111\fi
-  \ifnum#1=24 011000\fi
-  \ifnum#1=25 011001\fi
-  \ifnum#1=26 011010\fi
-  \ifnum#1=27 011011\fi
-  \ifnum#1=28 011100\fi
-  \ifnum#1=29 011101\fi
-  \ifnum#1=30 011110\fi
-  \ifnum#1=31 011111\fi
-  \ifnum#1=32 100000\fi
-  \ifnum#1=33 100001\fi
-  \ifnum#1=34 100010\fi
-  \ifnum#1=35 100011\fi
-  \ifnum#1=36 100100\fi
-  \ifnum#1=37 100101\fi
-  \ifnum#1=38 100110\fi
-  \ifnum#1=39 100111\fi
-  \ifnum#1=40 101000\fi
-  \ifnum#1=41 101001\fi
-  \ifnum#1=42 101010\fi
-  \ifnum#1=43 101011\fi
-  \ifnum#1=44 101100\fi
-  \ifnum#1=45 101101\fi
-  \ifnum#1=46 101110\fi
-  \ifnum#1=47 101111\fi
-  \ifnum#1=48 110000\fi
-  \ifnum#1=49 110001\fi
-  \ifnum#1=50 110010\fi
-  \ifnum#1=51 110011\fi
-  \ifnum#1=52 110100\fi
-  \ifnum#1=53 110101\fi
-  \ifnum#1=54 110110\fi
-  \ifnum#1=55 110111\fi
-  \ifnum#1=56 111000\fi
-  \ifnum#1=57 111001\fi
-  \ifnum#1=58 111010\fi
-  \ifnum#1=59 111011\fi
-  \ifnum#1=60 111100\fi
-  \ifnum#1=61 111101\fi
-  \ifnum#1=62 111110\fi
-  \ifnum#1=63 111111\fi
-}
+\newcommand{\@karnaughmap@func@decimaltobin@}[1]{\directlua{tex.sprint(decimalToBin(\the\numexpr(#1)\relax, 6))}}
 
 %% command raises an error if executed outside the karnaugh-map environment
 \newcommand{\@karnaughmap@func@bailoutsideenvironment@}[0]{%
@@ -293,10 +309,11 @@
       \newcommand{\@karnaughmap@local@maprealignmenty@}{0}%
       \ifnum\@karnaughmap@var@mapsizex@\@karnaughmap@var@mapsizey@\@karnaughmap@var@mapsizez@=221
         \renewcommand{\@karnaughmap@local@matrixtemplate@}{%
-                       \&                       0 \&                       1 \& \phantom{0} \\
-                     0 \& |(000000)|  \phantom{0} \& |(000001)|  \phantom{0} \&             \\
-                     1 \& |(000010)|  \phantom{0} \& |(000011)|  \phantom{0} \&             \\
-          \phantom{0}  \&                         \&                         \&             \\
+%                        \&                       0 \&                       1 \& \phantom{0} \\
+%                      0 \& |(000000)|  \phantom{0} \& |(000001)|  \phantom{0} \&             \\
+%                      1 \& |(000010)|  \phantom{0} \& |(000011)|  \phantom{0} \&             \\
+%           \phantom{0}  \&                         \&                         \&             \\
+          \directlua{generateKMap(2, 2)}
         }%
       \fi
       \ifnum\@karnaughmap@var@mapsizex@\@karnaughmap@var@mapsizey@\@karnaughmap@var@mapsizez@=241
@@ -319,12 +336,13 @@
       \fi
       \ifnum\@karnaughmap@var@mapsizex@\@karnaughmap@var@mapsizey@\@karnaughmap@var@mapsizez@=441
         \renewcommand{\@karnaughmap@local@matrixtemplate@}{%
-                       \&                      00 \&                      01 \&                      11 \&                      10 \& \phantom{00} \\
-                    00 \& |(000000)|  \phantom{0} \& |(000001)|  \phantom{0} \& |(000011)|  \phantom{0} \& |(000010)|  \phantom{0} \&              \\
-                    01 \& |(000100)|  \phantom{0} \& |(000101)|  \phantom{0} \& |(000111)|  \phantom{0} \& |(000110)|  \phantom{0} \&              \\
-                    11 \& |(001100)|  \phantom{0} \& |(001101)|  \phantom{0} \& |(001111)|  \phantom{0} \& |(001110)|  \phantom{0} \&              \\
-                    10 \& |(001000)|  \phantom{0} \& |(001001)|  \phantom{0} \& |(001011)|  \phantom{0} \& |(001010)|  \phantom{0} \&              \\
-          \phantom{00} \&                         \&                         \&                         \&                         \&              \\
+%                        \&                      00 \&                      01 \&                      11 \&                      10 \& \phantom{00} \\
+%                     00 \& |(000000)|  \phantom{0} \& |(000001)|  \phantom{0} \& |(000011)|  \phantom{0} \& |(000010)|  \phantom{0} \&              \\
+%                     01 \& |(000100)|  \phantom{0} \& |(000101)|  \phantom{0} \& |(000111)|  \phantom{0} \& |(000110)|  \phantom{0} \&              \\
+%                     11 \& |(001100)|  \phantom{0} \& |(001101)|  \phantom{0} \& |(001111)|  \phantom{0} \& |(001110)|  \phantom{0} \&              \\
+%                     10 \& |(001000)|  \phantom{0} \& |(001001)|  \phantom{0} \& |(001011)|  \phantom{0} \& |(001010)|  \phantom{0} \&              \\
+%           \phantom{00} \&                         \&                         \&                         \&                         \&              \\
+        \directlua{generateKMap(4, 4)}
         }%
       \fi
       \ifnum\@karnaughmap@var@mapsizex@\@karnaughmap@var@mapsizey@\@karnaughmap@var@mapsizez@=442
@@ -1263,4 +1281,16 @@
 %
 % An example of errorious usage related to the \small{\marg{cells}} parameter in the terms related commands can result in multiple zeros, ones and other terms overlapping in the same cell in the outputted karnaugh map.
 %
+
+\DeclareDocumentCommand{\kmapcolor}{O{red} O{green} O{yellow} O{cyan} O{blue} O{magenta} O{cyan}} {
+    \renewcommand{\@karnaughmap@func@decimaltocolor@}[1]{%
+        \ifnum##1=0 #1\fi
+        \ifnum##1=1 #2\fi
+        \ifnum##1=2 #3\fi
+        \ifnum##1=3 #4\fi
+        \ifnum##1=4 #5\fi
+        \ifnum##1=5 #6\fi
+        \ifnum##1>5 #7\fi
+    }
+}
 \endinput
