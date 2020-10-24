@@ -100,90 +100,12 @@
 %% drawing
 \RequirePackage{tikz}
 \usetikzlibrary{calc,matrix}
-\RequirePackage{luacode}
 
 %%
 %% Helpers
 %%
 
-\begin{luacode*}
- function decimalToBin(num, numb_bits)
-    num = tonumber(num)
-    numb_bits = tonumber(numb_bits)
-    local t={}
-    for b=numb_bits,1,-1 do
-        rest=math.floor(math.fmod(num,2))
-        t[b]=rest
-        num=(num-rest)/2
-    end
-    return table.concat(t)
- end
- 
- function decimalToGreyBin(num, numb_bits)
-    num = tonumber(num)
-    numb_bits = tonumber(numb_bits)
-    local t={}
-    for b=numb_bits,1,-1 do
-        rest=math.floor(math.fmod(num,2))
-        t[b]=rest
-        num=(num-rest)/2
-    end
-    local tg={}
-    for b=1,numb_bits,1 do
-        if b == 1 then 
-            tg[b] = t[b]
-        else
-            tg[b] = t[b] ~ t[b-1]
-        end
-    end
-    return table.concat(tg)
- end
- 
- function generateKMap(row, column)
-    local outside_column_bits = 1
-    local outside_row_bits = 1
-    if row >= 4 then
-        outside_row_bits = 2
-    end
-    if column >= 4 then
-        outside_column_bits = 2
-    end
-    for c=0,column+1,1 do
-        for r=0,row+1,1 do
-            if r == 0 then
-                if c == 0 then
-                    
-                elseif c == (column+1) then
-                    tex.sprint("\\phantom{", decimalToBin(0, outside_column_bits), "}")
-                else
-                    tex.sprint(decimalToGreyBin(c-1, outside_column_bits))
-                end
-            elseif r==(row+1) then
-                if c==0 then
-                    tex.sprint("\\phantom{", decimalToBin(0, outside_column_bits), "}")
-                end
-            else
-                if c == 0 then
-                    tex.sprint(decimalToGreyBin(r-1, outside_row_bits))
-                elseif c == (column+1) then
-                    
-                else
-                    tex.sprint("|(","00",
-                    decimalToGreyBin((c-1), 2),
-                    decimalToGreyBin((r-1), 2), ")|","\\phantom{0}")
-                    -- %TODO: Look into why reversing c and r from where they should be makes it work
-                end
-            end
-            
-            if r == (row+1) then
-                tex.sprint("\\\\")
-            else
-                tex.sprint("\\&")
-            end
-        end
-    end
- end
-\end{luacode*}
+\directlua{require("../cartonaugh")}
 
 
 %% convert decimal to color
