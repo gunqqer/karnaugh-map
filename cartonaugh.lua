@@ -65,8 +65,8 @@ function decimalToBin(num, numb_bits, return_concat)
     if column >= 4 then
         outside_column_bits = 2
     end
-    for c=0,column+1,1 do
-        for r=0,row+1,1 do
+    for c=1,column,1 do
+        for r=1,row,1 do
             if r == 0 then
                 if c == 0 then
                     
@@ -93,7 +93,7 @@ function decimalToBin(num, numb_bits, return_concat)
                 end
             end
             
-            if r == (row+1) then
+            if r == (row) then
                 return_str = return_str .. ("\\\\")
             else
                 return_str = return_str .. ("\\&")
@@ -103,18 +103,40 @@ function decimalToBin(num, numb_bits, return_concat)
     return return_str
  end
  
- function draw_pgf_kmap(column, row, grid_numb)
+ function draw_pgf_kmap(column, row, grid_numb, implacant1, implacant2)
     grid_numb = grid_numb-1
+    -- TODO: Transform the following settings variables into arguments
+    local is_multitable_seperated = true    -- Setting to determine if the graphs are drawn with a sperator line or distanced out
+    local graph_seperator = 1.5                -- Seperation lenght between kmaps if is_multitable_seperated=false
+    local kmaplevel_seperator_lenght = 0.1   -- Setting to determine the seperator line's thickness if is_multitable_seperated=true
+    local line_width = 0.015                 -- Set the line thickness of things here
+    local zero_var_line_lenght = 0.75         -- The lenght of the line at the top-left corner of the kmap where the implacants reside
     for d=0,grid_numb,1 do
+        if is_multitable_seperated then graph_seperator = 0 end
         -- Find the top-left corner of each grid (seperated by 1 unit)
-        local grid_x_loc = (d % 2)*(column+1)
-        local grid_y_loc = (d // 2)*(row+1)
-        -- Print out the grid
-        localPrint(string.format("\\draw[color=black, ultra thin] (%d,%d) grid (%d, %d);", grid_x_loc, grid_y_loc, grid_x_loc+column, grid_y_loc+row))
-        -- Print out the 
+        local grid_x_loc = (d % 2)*(column+graph_seperator)
+        local grid_y_loc = -(d // 2)*(row+graph_seperator)
+--         localPrint(string.format("\\node[above] at (%f,%f) {\\small{%s}};", 0, 0, abimplecant))
+        if is_multitable_seperated then
+            if (d % 2) == 1 then
+                local add_heigh = 0
+                if d >= 2 then add_heigh = kmaplevel_seperator_lenght end
+                localPrint(string.format("\\fill[black] (%f,%f) rectangle (%f,%f);", grid_x_loc, grid_y_loc, grid_x_loc+kmaplevel_seperator_lenght, grid_y_loc-row-line_width-add_heigh))
+                grid_x_loc = grid_x_loc + kmaplevel_seperator_lenght
+            end
+            if d >= 2 then
+                localPrint(string.format("\\fill[black] (%f,%f) rectangle (%f,%f);", grid_x_loc, grid_y_loc, grid_x_loc+column+line_width, grid_y_loc-kmaplevel_seperator_lenght))
+                grid_y_loc = grid_y_loc - kmaplevel_seperator_lenght
+            end
+        end
+        if (is_multitable_seperated == false) or (d==0) then
+            localPrint(string.format("\\draw[inner sep=0pt, outer sep=0pt] (%f, %f) -- (%f, %f);", grid_x_loc+line_width, grid_y_loc-line_width, grid_x_loc-zero_var_line_lenght, grid_y_loc+zero_var_line_lenght))
+            localPrint(string.format("\\node[right] at (%f,%f) {\\small{%s}};", grid_x_loc-0.6, grid_y_loc+0.6, implacant1))
+            localPrint(string.format("\\node[left] at (%f,%f) {\\small{%s}};", grid_x_loc-0.3, grid_y_loc+0.3, implacant2))
+        end
         -- Print out the matrix
-        localPrint(string.format("\\matrix[matrix of nodes, ampersand replacement=\\&, column sep={1cm,between origins}, row sep={1cm,between origins},] at (%f, %f) {%s};", 
-                                 grid_x_loc+(column//2), grid_y_loc+(row//2), generateKMap(row, column, d)
+        localPrint(string.format("\\matrix[matrix of nodes, ampersand replacement=\\&, column sep={1cm,between origins}, row sep={1cm,between origins}, nodes={rectangle,draw,minimum height=1cm,align=center,text width=1cm,inner sep=0pt, text height=2ex, text depth=0.5ex, line width=0.015cm}, anchor=north west, inner sep=0pt, outer sep=0pt] at (%f, %f) {%s};", 
+                                 grid_x_loc, grid_y_loc, generateKMap(row, column, d)
                                  ))
     end
  end

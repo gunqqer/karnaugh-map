@@ -107,9 +107,13 @@
 %       }%
 %     \fi
     \begin{tikzpicture}
-        \directlua{draw_pgf_kmap(\the\numexpr(\@karnaughmap@var@mapsizex@)\relax,
+        \directlua{draw_pgf_kmap(
+                   \the\numexpr(\@karnaughmap@var@mapsizex@)\relax,
                    \the\numexpr(\@karnaughmap@var@mapsizey@)\relax,
-                   \the\numexpr(\@karnaughmap@var@mapsizez@)\relax)}
+                   \the\numexpr(\@karnaughmap@var@mapsizez@)\relax,
+                   "\luaescapestring{\detokenize{#5}}",
+                   "\luaescapestring{\detokenize{#6}}"
+                   )}
 %       \foreach \gridnum in {1,...,\@karnaughmap@var@mapsizez@} {%
 %         \renewcommand{\@karnaughmap@var@grixsplacement@}{\multiply \gridnum by 5\relax}
 %         \renewcommand{\@karnaughmap@var@griysplacement@}{\multiply \gridnum by 5\relax}
