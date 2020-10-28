@@ -27,7 +27,7 @@ function decimalToBin(num, numb_bits, return_concat)
         return t
     end
  end
- 
+
  -- Function that converts a decimal number to grey code
  function decimalToGreyBin(num, numb_bits)
     -- Get the binary array
@@ -35,7 +35,7 @@ function decimalToBin(num, numb_bits, return_concat)
     local tg={}
     -- Find grey code from binary by XORing the previous bit going from MSB to LSB
     for b=1,numb_bits,1 do
-        if b == 1 then 
+        if b == 1 then
             tg[b] = t[b]
         else
             tg[b] = t[b] ~ t[b-1]
@@ -43,7 +43,7 @@ function decimalToBin(num, numb_bits, return_concat)
     end
     return table.concat(tg)
  end
- 
+
  -- Function to pad a string by a amount with b string
  function padString(str, pad_to, pad_with)
     local ret = str
@@ -52,7 +52,7 @@ function decimalToBin(num, numb_bits, return_concat)
     end
     return ret
  end
- 
+
  -- Function to generate a kmap template
  function generateKMap(column, row, grid_numb)
     local outside_column_bits = 1
@@ -69,7 +69,7 @@ function decimalToBin(num, numb_bits, return_concat)
         for r=1,row,1 do
             if r == 0 then
                 if c == 0 then
-                    
+
                 elseif c == (column+1) then
                     return_str = return_str .. ("\\phantom{" .. decimalToBin(0, outside_column_bits) .. "}")
                 else
@@ -83,16 +83,16 @@ function decimalToBin(num, numb_bits, return_concat)
                 if c == 0 then
                     return_str = return_str .. (decimalToGreyBin(r-1, outside_row_bits))
                 elseif c == (column+1) then
-                    
+
                 else
---                     localPrint("|(" .. "00" .. 
+--                     localPrint("|(" .. "00" ..
 --                     decimalToGreyBin((c-1), 2) ..
 --                     decimalToGreyBin((r-1), 2) ..  ")|" .. "\\phantom{0}")
                     return_str = return_str ..("|(" .. padString((decimalToGreyBin(grid_numb, outside_grid_numb_bits) .. decimalToGreyBin(c-1, outside_column_bits) .. decimalToGreyBin(r-1, outside_row_bits)), 6, 0) ..  ")|" .. "\\phantom{0}")
                     --TODO: Look into why reversing c and r from where they should be makes it work
                 end
             end
-            
+
             if r == (row) then
                 return_str = return_str .. ("\\\\")
             else
@@ -102,7 +102,7 @@ function decimalToBin(num, numb_bits, return_concat)
     end
     return return_str
  end
- 
+
  function draw_pgf_kmap(column, row, grid_numb, implacant1, implacant2)
     grid_numb = grid_numb-1
     -- TODO: Transform the following settings variables into arguments
@@ -135,10 +135,9 @@ function decimalToBin(num, numb_bits, return_concat)
             localPrint(string.format("\\node[left] at (%f,%f) {\\small{%s}};", grid_x_loc-0.3, grid_y_loc+0.3, implacant2))
         end
         -- Print out the matrix
-        localPrint(string.format("\\matrix[matrix of nodes, ampersand replacement=\\&, column sep={1cm,between origins}, row sep={1cm,between origins}, nodes={rectangle,draw,minimum height=1cm,align=center,text width=1cm,inner sep=0pt, text height=2ex, text depth=0.5ex, line width=0.015cm}, anchor=north west, inner sep=0pt, outer sep=0pt] at (%f, %f) {%s};", 
+        localPrint(string.format("\\matrix[matrix of nodes, ampersand replacement=\\&, column sep={1cm,between origins}, row sep={1cm,between origins}, nodes={rectangle,draw,minimum height=1cm,align=center,text width=1cm,inner sep=0pt, text height=2ex, text depth=0.5ex, line width=0.015cm}, anchor=north west, inner sep=0pt, outer sep=0pt] at (%f, %f) {%s};",
                                  grid_x_loc, grid_y_loc, generateKMap(row, column, d)
                                  ))
     end
  end
- 
- 
+

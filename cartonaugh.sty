@@ -1,14 +1,25 @@
 %%
-%% This is file `karnaugh-map.sty',
+%% This is file `cartonaugh.sty',
 %% generated with the docstrip utility.
 %%
 %% The original source files were:
 %%
-%% karnaugh-map.dtx  (with options: `package')
+%% cartonaugh.dtx  (with options: `package')
 %% 
-%% This generated file originates from the karnaugh-map package!
+%% IMPORTANT NOTICE:
 %% 
-
+%% For the copyright see the source file.
+%% 
+%% Any modified versions of this file must be renamed
+%% with new filenames distinct from cartonaugh.sty.
+%% 
+%% For distribution of the original source see the terms
+%% for copying and modification in the file cartonaugh.dtx.
+%% 
+%% This generated file may be distributed as long as the
+%% original source files, as listed above, are part of the
+%% same distribution. (The sources need not necessarily be
+%% in the same archive or directory.)
 %%
 %% Copyright (C) 2015, 2016, 2017 Mattias Jacobsson and contributors
 %% This work, karnaugh-map, is written from the ground up by Mattias Jacobsson. However the general implementation idea is based on the work published on [TeX - LaTeX Stack Exchange](https://tex.stackexchange.com) by [Ignasi](https://tex.stackexchange.com/users/1952/ignasi) found [here](https://tex.stackexchange.com/a/140581) and [here](https://tex.stackexchange.com/a/36879) which is licensed under [CC BY-SA](https://creativecommons.org/licenses/by-sa/3.0/). karnaugh-map is therefore licensed under [CC BY-SA](https://creativecommons.org/licenses/by-sa/3.0/). Contributors include [Oscar Gustafsson](https://github.com/oscargus).
@@ -35,8 +46,7 @@
 %% Helpers
 %%
 
-% TODO: Remove ../
-\directlua{require("../cartonaugh")}
+\directlua{require("cartonaugh")}
 
 %% convert decimal to color
 \newcommand{\@karnaughmap@func@decimaltocolor@}[1]{%
@@ -70,15 +80,6 @@
 
 %% render in black and white or color default to '0'(false/color)
 \newcommand{\@karnaughmap@var@bw@}{0}
-
-
-\newcommand{\@karnaughmap@var@grixsplacement@}{0}
-\newcommand{\@karnaughmap@var@griysplacement@}{0}
-
-%%
-%% Environment
-%%
-
 \NewDocumentEnvironment{karnaugh-map}{s O{4} O{4} O{1} O{$X_1X_0$} O{$X_3X_2$} O{$X_5X_4$}} {%
   \begingroup
     % store map size {[START]
@@ -95,17 +96,9 @@
       \renewcommand{\@karnaughmap@var@bw@}{0}%
     }%
     %
-    
+
     % [END]}
     % test if a matrix template is found or not(aka "\@karnaughmap@local@matrixtemplate@" equals to '0')
-%     \ifnum0=\@karnaughmap@local@matrixtemplate@
-%       print error if no template could be found
-%       \PackageError{karnaugh-map}{%
-%         Can not find a template fitting your specification (\@karnaughmap@var@mapsizex@\space x \@karnaughmap@var@mapsizey@\space x \@karnaughmap@var@mapsizez@)%
-%       }{%
-%         Existing templates have the following dimensions: 2x2x1, 2x4x1, 4x2x1, 4x4x1, 4x4x2, and 4x4x4.
-%       }%
-%     \fi
     \begin{tikzpicture}
         \directlua{draw_pgf_kmap(
                    \the\numexpr(\@karnaughmap@var@mapsizex@)\relax,
@@ -114,53 +107,6 @@
                    "\luaescapestring{\detokenize{#5}}",
                    "\luaescapestring{\detokenize{#6}}"
                    )}
-%       \foreach \gridnum in {1,...,\@karnaughmap@var@mapsizez@} {%
-%         \renewcommand{\@karnaughmap@var@grixsplacement@}{\multiply \gridnum by 5\relax}
-%         \renewcommand{\@karnaughmap@var@griysplacement@}{\multiply \gridnum by 5\relax}
-%         grid
-%         for all dimensions
-%         \draw[color=black, ultra thin] (0,0) grid (\@karnaughmap@var@mapsizex@,\@karnaughmap@var@mapsizey@);
-%         when there are 2 sub maps
-%         \ifnum\@karnaughmap@var@mapsizez@=2
-%             \draw[color=black, ultra thin] (5,0) grid (9,4);
-%         \fi
-%         when there are 4 sub maps
-%         \ifnum\@karnaughmap@var@mapsizez@=4
-%             \draw[color=black, ultra thin] (5,0) grid (9,4);
-%             \draw[color=black, ultra thin] (0,-5) grid (4,-1);
-%             \draw[color=black, ultra thin] (5,-5) grid (9,-1);
-%         \fi
-%         labels
-%         for all dimensions
-%         \node[above] at (\@karnaughmap@var@mapsizex@*0.5,\@karnaughmap@var@mapsizey@+0.9) {\small{#5}};
-%         \node[left] at (-0.9,\@karnaughmap@var@mapsizey@*0.5) {\small{#6}};
-%         when there are 2 sub maps
-%         \ifnum\@karnaughmap@var@mapsizez@=2
-%             \node[above] at (7,4.9) {\small{#5}};
-%             extra sub maps labels
-%             \node[below] at (2,-0.1) {\small{#7$=0$}};
-%             \node[below] at (7,-0.1) {\small{#7$=1$}};
-%         \fi
-%         when there are 4 sub maps
-%         \ifnum\@karnaughmap@var@mapsizez@=4
-%             \node[above] at (7,4.9) {\small{#5}};
-%             \node[left] at (-0.9,-3) {\small{#6}};
-%             extra sub maps labels
-%             \node[below] at (2,-0.1) {\small{#7$=00$}};
-%             \node[below] at (7,-0.1) {\small{#7$=01$}};
-%             \node[below] at (2,-5.1) {\small{#7$=10$}};
-%             \node[below] at (7,-5.1) {\small{#7$=11$}};
-%         \fi
-%         data
-%         \matrix[
-%             matrix of nodes,
-%             ampersand replacement=\&,
-%             column sep={1cm,between origins},
-%             row sep={1cm,between origins},
-%         ] at (\@karnaughmap@var@mapsizex@*0.5,\@karnaughmap@var@mapsizey@*0.5) {
-%             \directlua{generateKMap(\the\numexpr(\@karnaughmap@var@mapsizex@)\relax, \the\numexpr(\@karnaughmap@var@mapsizey@)\relax, \the\numexpr(\gridnum)\relax)}%
-%         };
-%       }
 }{
     \end{tikzpicture}
   \endgroup
@@ -519,17 +465,6 @@
   \fi
 }
 
-\DeclareDocumentCommand{\kmapcolor}{O{red} O{green} O{yellow} O{cyan} O{blue} O{magenta} O{cyan}} {
-    \renewcommand{\@karnaughmap@func@decimaltocolor@}[1]{%
-        \ifnum##1=0 #1\fi
-        \ifnum##1=1 #2\fi
-        \ifnum##1=2 #3\fi
-        \ifnum##1=3 #4\fi
-        \ifnum##1=4 #5\fi
-        \ifnum##1=5 #6\fi
-        \ifnum##1>5 #7\fi
-    }
-}
 \endinput
 %%
-%% End of file `karnaugh-map.sty'.
+%% End of file `cartonaugh.sty'.
