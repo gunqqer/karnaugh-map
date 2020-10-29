@@ -11,3 +11,4 @@ test/actual
 test/result
 *.bak
 *.gz
+*.orig
