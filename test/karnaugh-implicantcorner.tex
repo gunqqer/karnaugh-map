@@ -1,38 +1,38 @@
 \documentclass{standalone}
-\usepackage{../karnaugh-map}
+\usepackage{../cartonaugh}
 \begin{document}
   % test default(should only draw on 0th submap)
-  \begin{karnaugh-map}[4][4][1]
+  \begin{cartonaugh}[4][4][1]
     \implicantcorner
-  \end{karnaugh-map}
-  \begin{karnaugh-map}[4][4][2]
+  \end{cartonaugh}
+  \begin{cartonaugh}[4][4][2]
     \implicantcorner
-  \end{karnaugh-map}
-  \begin{karnaugh-map}[4][4][4]
+  \end{cartonaugh}
+  \begin{cartonaugh}[4][4][4]
     \implicantcorner
-  \end{karnaugh-map}
+  \end{cartonaugh}
   % draw on 0th and 2nd submaps(when possible)
-  \begin{karnaugh-map}[4][4][1]
+  \begin{cartonaugh}[4][4][1]
     \implicantcorner[0,2]
-  \end{karnaugh-map}
-  \begin{karnaugh-map}[4][4][2]
+  \end{cartonaugh}
+  \begin{cartonaugh}[4][4][2]
     \implicantcorner[0,2]
-  \end{karnaugh-map}
-  \begin{karnaugh-map}[4][4][4]
+  \end{cartonaugh}
+  \begin{cartonaugh}[4][4][4]
     \implicantcorner[0,2]
-  \end{karnaugh-map}
+  \end{cartonaugh}
   % draw multiple different implicants
-  \begin{karnaugh-map}[4][4][1]
+  \begin{cartonaugh}[4][4][1]
     \implicantcorner[0]
-  \end{karnaugh-map}
-  \begin{karnaugh-map}[4][4][2]
+  \end{cartonaugh}
+  \begin{cartonaugh}[4][4][2]
     \implicantcorner[0]
     \implicantcorner[1]
-  \end{karnaugh-map}
-  \begin{karnaugh-map}[4][4][4]
+  \end{cartonaugh}
+  \begin{cartonaugh}[4][4][4]
     \implicantcorner[0]
     \implicantcorner[1]
     \implicantcorner[2]
     \implicantcorner[3]
-  \end{karnaugh-map}
+  \end{cartonaugh}
 \end{document}
