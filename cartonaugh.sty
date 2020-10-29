@@ -26,11 +26,15 @@
 %%
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{karnaugh-map}[2017/02/20 v1.1 Draw Karnaugh Maps]
+\ProvidesPackage{cartonaugh}[2017/02/20 v1.1 Draw Karnaugh Maps]
 
 %%
 %% Dependencies
 %%
+
+%% Check if ran under LuaLaTeX. If not, exit
+\RequirePackage{iftex}
+\RequireLuaTeX
 
 %% parsing arguments
 \RequirePackage{xparse}
@@ -45,11 +49,10 @@
 %%
 %% Helpers
 %%
-
 \directlua{require("cartonaugh")}
 
 %% convert decimal to color
-\newcommand{\@karnaughmap@func@decimaltocolor@}[1]{%
+\newcommand{\@cartonaugh@func@decimaltocolor@}[1]{%
   \ifnum#1=0 red\fi
   \ifnum#1=1 green\fi
   \ifnum#1=2 yellow\fi
@@ -60,50 +63,49 @@
 }
 
 %% convert decimal to binary 6-bit
-\newcommand{\@karnaughmap@func@decimaltobin@}[1]{\directlua{tex.sprint(decimalToBin(\the\numexpr(#1)\relax, 6))}}
+\newcommand{\@cartonaugh@func@decimaltobin@}[1]{\directlua{tex.sprint(decimalToBin(\the\numexpr(#1)\relax, 6))}}
 
-%% command raises an error if executed outside the karnaugh-map environment
-\newcommand{\@karnaughmap@func@bailoutsideenvironment@}[0]{%
-  \ifnum\@karnaughmap@var@mapsizex@\@karnaughmap@var@mapsizey@\@karnaughmap@var@mapsizez@=000
-    \PackageError{karnaugh-map}{%
-      Command can not be used outside karnaugh-map environment%
+%% command raises an error if executed outside the cartonaugh environment
+\newcommand{\@cartonaugh@func@bailoutsideenvironment@}[0]{%
+  \ifnum\@cartonaugh@var@mapsizex@\@cartonaugh@var@mapsizey@\@cartonaugh@var@mapsizez@=000
+    \PackageError{cartonaugh}{%
+      Command can not be used outside cartonaugh environment%
     }{%
-      Do not use this command outside the karnaugh-map environment.%
+      Do not use this command outside the cartonaugh environment.%
     }
   \fi
 }
 
 %% store map size
-\newcommand{\@karnaughmap@var@mapsizex@}{0}
-\newcommand{\@karnaughmap@var@mapsizey@}{0}
-\newcommand{\@karnaughmap@var@mapsizez@}{0}
+\newcommand{\@cartonaugh@var@mapsizex@}{0}
+\newcommand{\@cartonaugh@var@mapsizey@}{0}
+\newcommand{\@cartonaugh@var@mapsizez@}{0}
 
 %% render in black and white or color default to '0'(false/color)
-\newcommand{\@karnaughmap@var@bw@}{0}
-\NewDocumentEnvironment{karnaugh-map}{s O{4} O{4} O{1} O{$X_1X_0$} O{$X_3X_2$} O{$X_5X_4$}} {%
+\newcommand{\@cartonaugh@var@bw@}{0}
+\NewDocumentEnvironment{cartonaugh}{s O{4} O{4} O{1} O{$X_1X_0$} O{$X_3X_2$} O{$X_5X_4$}} {%
   \begingroup
     % store map size {[START]
-      \renewcommand{\@karnaughmap@var@mapsizex@}{#2}%
-      \renewcommand{\@karnaughmap@var@mapsizey@}{#3}%
-      \renewcommand{\@karnaughmap@var@mapsizez@}{#4}%
+      \renewcommand{\@cartonaugh@var@mapsizex@}{#2}%
+      \renewcommand{\@cartonaugh@var@mapsizey@}{#3}%
+      \renewcommand{\@cartonaugh@var@mapsizez@}{#4}%
     % [END]}
     % determinate if markings should be color or black and white
     \IfBooleanTF{#1}{%
       % should be black and white
-      \renewcommand{\@karnaughmap@var@bw@}{1}%
+      \renewcommand{\@cartonaugh@var@bw@}{1}%
     }{%
       % should be color
-      \renewcommand{\@karnaughmap@var@bw@}{0}%
+      \renewcommand{\@cartonaugh@var@bw@}{0}%
     }%
     %
-
     % [END]}
-    % test if a matrix template is found or not(aka "\@karnaughmap@local@matrixtemplate@" equals to '0')
+    % test if a matrix template is found or not(aka "\@cartonaugh@local@matrixtemplate@" equals to '0')
     \begin{tikzpicture}
         \directlua{draw_pgf_kmap(
-                   \the\numexpr(\@karnaughmap@var@mapsizex@)\relax,
-                   \the\numexpr(\@karnaughmap@var@mapsizey@)\relax,
-                   \the\numexpr(\@karnaughmap@var@mapsizez@)\relax,
+                   \the\numexpr(\@cartonaugh@var@mapsizex@)\relax,
+                   \the\numexpr(\@cartonaugh@var@mapsizey@)\relax,
+                   \the\numexpr(\@cartonaugh@var@mapsizez@)\relax,
                    "\luaescapestring{\detokenize{#5}}",
                    "\luaescapestring{\detokenize{#6}}"
                    )}
@@ -117,85 +119,85 @@
 %%
 
 %% store already used cells to avoid double filled cells and for auto completion
-\newcommand{\@karnaughmap@var@usedcells@}{,}
+\newcommand{\@cartonaugh@var@usedcells@}{,}
 
 \DeclareDocumentCommand{\autoterms}{O{-}} {%
-  % bail if outside environment karnaugh-map
-  \@karnaughmap@func@bailoutsideenvironment@{}
+  % bail if outside environment cartonaugh
+  \@cartonaugh@func@bailoutsideenvironment@{}
   %
   \begingroup
     % calculate max cell number {[START]
-      \newcount\@karnaughmap@local@max@\relax
-      \@karnaughmap@local@max@=\@karnaughmap@var@mapsizex@\relax
-      \multiply\@karnaughmap@local@max@ by \@karnaughmap@var@mapsizey@\relax
-      \multiply\@karnaughmap@local@max@ by \@karnaughmap@var@mapsizez@\relax
-      \advance\@karnaughmap@local@max@ by -1\relax
+      \newcount\@cartonaugh@local@max@\relax
+      \@cartonaugh@local@max@=\@cartonaugh@var@mapsizex@\relax
+      \multiply\@cartonaugh@local@max@ by \@cartonaugh@var@mapsizey@\relax
+      \multiply\@cartonaugh@local@max@ by \@cartonaugh@var@mapsizez@\relax
+      \advance\@cartonaugh@local@max@ by -1\relax
     % [END]}
     % fill terms
-    \foreach \cell in {0,1,2,...,\@karnaughmap@local@max@} {%
-      \IfSubStr{\@karnaughmap@var@usedcells@}{,\cell,}{}{%
-        \path (\@karnaughmap@func@decimaltobin@{\cell}) node {#1};
+    \foreach \cell in {0,1,2,...,\@cartonaugh@local@max@} {%
+      \IfSubStr{\@cartonaugh@var@usedcells@}{,\cell,}{}{%
+        \path (\@cartonaugh@func@decimaltobin@{\cell}) node {#1};
       }
     }
   \endgroup
-  % update \@karnaughmap@var@usedcells@ (all cells are used now)
-  \renewcommand{\@karnaughmap@var@usedcells@}{,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,}
+  % update \@cartonaugh@var@usedcells@ (all cells are used now)
+  \renewcommand{\@cartonaugh@var@usedcells@}{,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,}
 }
 \DeclareDocumentCommand{\indeterminants}{m} {%
-  % bail if outside environment karnaugh-map
-  \@karnaughmap@func@bailoutsideenvironment@{}
+  % bail if outside environment cartonaugh
+  \@cartonaugh@func@bailoutsideenvironment@{}
   %
   \terms{#1}{-}
 }
 \DeclareDocumentCommand{\manualterms}{m} {%
-  % bail if outside environment karnaugh-map
-  \@karnaughmap@func@bailoutsideenvironment@{}
+  % bail if outside environment cartonaugh
+  \@cartonaugh@func@bailoutsideenvironment@{}
   %
   \foreach \cellinfo [count=\cell from 0] in {#1} {%
     % only write to cell if it is empty otherwise fail silently
-    \IfSubStr{\@karnaughmap@var@usedcells@}{,\cell,}{}{%
-      \path (\@karnaughmap@func@decimaltobin@{\cell}) node {\cellinfo};
+    \IfSubStr{\@cartonaugh@var@usedcells@}{,\cell,}{}{%
+      \path (\@cartonaugh@func@decimaltobin@{\cell}) node {\cellinfo};
     }
   }
-  % update \@karnaughmap@var@usedcells@ (previous cells + all cells up to \@karnaughmap@local@cellcount@ are used now) {[START]
-    \newcommand{\@karnaughmap@local@tmpusedcells@}{}
-    \newcount\@karnaughmap@local@cellcount@\relax
+  % update \@cartonaugh@var@usedcells@ (previous cells + all cells up to \@cartonaugh@local@cellcount@ are used now) {[START]
+    \newcommand{\@cartonaugh@local@tmpusedcells@}{}
+    \newcount\@cartonaugh@local@cellcount@\relax
     % count number of cells in #1 {[START]
-      \StrCount{#1}{,}[\@karnaughmap@local@tmpusedcells@]
-      \@karnaughmap@local@cellcount@=\@karnaughmap@local@tmpusedcells@\relax
-      \advance\@karnaughmap@local@cellcount@ by 1\relax
-      \multiply\@karnaughmap@local@cellcount@ by 2\relax
+      \StrCount{#1}{,}[\@cartonaugh@local@tmpusedcells@]
+      \@cartonaugh@local@cellcount@=\@cartonaugh@local@tmpusedcells@\relax
+      \advance\@cartonaugh@local@cellcount@ by 1\relax
+      \multiply\@cartonaugh@local@cellcount@ by 2\relax
     % [END]}
-    % create sequence for \@karnaughmap@local@tmpusedcells@
-    \StrLeft{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,}{\@karnaughmap@local@cellcount@}[\@karnaughmap@local@tmpusedcells@]
-    % update \@karnaughmap@var@usedcells@ (append \@karnaughmap@local@tmpusedcells@)
-    \expandafter\def\expandafter\@karnaughmap@var@usedcells@\expandafter{\@karnaughmap@var@usedcells@\@karnaughmap@local@tmpusedcells@}
+    % create sequence for \@cartonaugh@local@tmpusedcells@
+    \StrLeft{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,}{\@cartonaugh@local@cellcount@}[\@cartonaugh@local@tmpusedcells@]
+    % update \@cartonaugh@var@usedcells@ (append \@cartonaugh@local@tmpusedcells@)
+    \expandafter\def\expandafter\@cartonaugh@var@usedcells@\expandafter{\@cartonaugh@var@usedcells@\@cartonaugh@local@tmpusedcells@}
   % [END]}
 }
 \DeclareDocumentCommand{\maxterms}{m} {%
-  % bail if outside environment karnaugh-map
-  \@karnaughmap@func@bailoutsideenvironment@{}
+  % bail if outside environment cartonaugh
+  \@cartonaugh@func@bailoutsideenvironment@{}
   %
   \terms{#1}{0}
 }
 \DeclareDocumentCommand{\minterms}{m} {%
-  % bail if outside environment karnaugh-map
-  \@karnaughmap@func@bailoutsideenvironment@{}
+  % bail if outside environment cartonaugh
+  \@cartonaugh@func@bailoutsideenvironment@{}
   %
   \terms{#1}{1}
 }
 \DeclareDocumentCommand{\terms}{m m} {%
-  % bail if outside environment karnaugh-map
-  \@karnaughmap@func@bailoutsideenvironment@{}
+  % bail if outside environment cartonaugh
+  \@cartonaugh@func@bailoutsideenvironment@{}
   %
   \foreach \cell in {#1} {%
     % only write to cell if it is empty otherwise fail silently
-    \IfSubStr{\@karnaughmap@var@usedcells@}{,\cell,}{}{%
-      \path (\@karnaughmap@func@decimaltobin@{\cell}) node {#2};
+    \IfSubStr{\@cartonaugh@var@usedcells@}{,\cell,}{}{%
+      \path (\@cartonaugh@func@decimaltobin@{\cell}) node {#2};
     }
   }
-  % update \@karnaughmap@var@usedcells@
-  \expandafter\def\expandafter\@karnaughmap@var@usedcells@\expandafter{\@karnaughmap@var@usedcells@#1,}
+  % update \@cartonaugh@var@usedcells@
+  \expandafter\def\expandafter\@cartonaugh@var@usedcells@\expandafter{\@cartonaugh@var@usedcells@#1,}
 }
 
 %%
@@ -203,50 +205,50 @@
 %%
 
 %% keep track of used colors
-\newcount\@karnaughmap@var@colorindex@\relax
-\@karnaughmap@var@colorindex@=0\relax
+\newcount\@cartonaugh@var@colorindex@\relax
+\@cartonaugh@var@colorindex@=0\relax
 
 \DeclareDocumentCommand{\implicant}{m m O{0}} {%
-  % bail if outside environment karnaugh-map
-  \@karnaughmap@func@bailoutsideenvironment@{}
+  % bail if outside environment cartonaugh
+  \@cartonaugh@func@bailoutsideenvironment@{}
   %
   \begingroup
     % loop through specified sub maps
     \foreach \map in {#3} {%
       % make sure we don't try to draw on non existing sub maps
-      \ifnum\map<\@karnaughmap@var@mapsizez@
+      \ifnum\map<\@cartonaugh@var@mapsizez@
         % calculate cell number for the specified sub maps {[START]
-          \newcount\@karnaughmap@local@northwest@\relax
-          \newcount\@karnaughmap@local@southeast@\relax
-          \@karnaughmap@local@northwest@=\map\relax
-          \@karnaughmap@local@southeast@=\map\relax
-          \multiply\@karnaughmap@local@northwest@ by 16\relax
-          \multiply\@karnaughmap@local@southeast@ by 16\relax
-          \advance\@karnaughmap@local@northwest@ by #1\relax
-          \advance\@karnaughmap@local@southeast@ by #2\relax
+          \newcount\@cartonaugh@local@northwest@\relax
+          \newcount\@cartonaugh@local@southeast@\relax
+          \@cartonaugh@local@northwest@=\map\relax
+          \@cartonaugh@local@southeast@=\map\relax
+          \multiply\@cartonaugh@local@northwest@ by 16\relax
+          \multiply\@cartonaugh@local@southeast@ by 16\relax
+          \advance\@cartonaugh@local@northwest@ by #1\relax
+          \advance\@cartonaugh@local@southeast@ by #2\relax
         % [END]}
-        % only fill marking when \@karnaughmap@var@bw@ = '0'
-        \ifnum0=\@karnaughmap@var@bw@
+        % only fill marking when \@cartonaugh@var@bw@ = '0'
+        \ifnum0=\@cartonaugh@var@bw@
           \fill[
             rounded corners=3pt,
-            fill=\@karnaughmap@func@decimaltocolor@{\@karnaughmap@var@colorindex@},
+            fill=\@cartonaugh@func@decimaltocolor@{\@cartonaugh@var@colorindex@},
             fill opacity=0.25,
           ] {
-            ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@northwest@}.center)+(-0.3,0.3)$)
+            ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@northwest@}.center)+(-0.3,0.3)$)
             rectangle
-            ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@southeast@}.center)+(0.3,-0.3)$)
+            ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@southeast@}.center)+(0.3,-0.3)$)
           };
         \fi
         \draw[
           rounded corners=3pt,
           draw opacity=1.0,
         ] {
-          ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@northwest@}.center)+(-0.3,0.3)$)
+          ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@northwest@}.center)+(-0.3,0.3)$)
           rectangle
-          ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@southeast@}.center)+(0.3,-0.3)$)
+          ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@southeast@}.center)+(0.3,-0.3)$)
         };
       \else
-        \PackageWarning{karnaugh-map}{%
+        \PackageWarning{cartonaugh}{%
           You can only draw on existing sub maps.
           Ignoring instruction to draw on non existing sub map number \map%
         }
@@ -254,138 +256,138 @@
     }
   \endgroup
   % mark color as used
-  \advance\@karnaughmap@var@colorindex@ by 1\relax
+  \advance\@cartonaugh@var@colorindex@ by 1\relax
 }
 \DeclareDocumentCommand{\implicantedge}{m m m m O{0}} {%
-  % bail if outside environment karnaugh-map
-  \@karnaughmap@func@bailoutsideenvironment@{}
+  % bail if outside environment cartonaugh
+  \@cartonaugh@func@bailoutsideenvironment@{}
   %
   \begingroup
     % helper variables {[START]
-      \newcommand{\@karnaughmap@local@orientation@}{0} % '0' is a vertical and '1' is a horizontal implicant
-      \newcommand{\@karnaughmap@local@coordinateone@}{0}
-      \newcommand{\@karnaughmap@local@coordinatetwo@}{0}
-      \newcommand{\@karnaughmap@local@mirror@}{1} % '1' or '-1' to mirror
-      \newcommand{\@karnaughmap@local@bordercontent@}{}
-      \newcommand{\@karnaughmap@local@fillcontent@}{}
+      \newcommand{\@cartonaugh@local@orientation@}{0} % '0' is a vertical and '1' is a horizontal implicant
+      \newcommand{\@cartonaugh@local@coordinateone@}{0}
+      \newcommand{\@cartonaugh@local@coordinatetwo@}{0}
+      \newcommand{\@cartonaugh@local@mirror@}{1} % '1' or '-1' to mirror
+      \newcommand{\@cartonaugh@local@bordercontent@}{}
+      \newcommand{\@cartonaugh@local@fillcontent@}{}
     % [END]}
     % determinate if this is an horizontal or vertical implicant {[START]
-      \newcount\@karnaughmap@local@testcaseone@\relax
-      \newcount\@karnaughmap@local@testcasetwo@\relax
-      \@karnaughmap@local@testcaseone@=#1\relax
-      \@karnaughmap@local@testcasetwo@=#1\relax
-      \advance\@karnaughmap@local@testcaseone@ by -#2\relax
-      \advance\@karnaughmap@local@testcasetwo@ by -#3\relax
-      \ifnum\@karnaughmap@local@testcaseone@<0 \multiply\@karnaughmap@local@testcaseone@ by -1\relax\fi
-      \ifnum\@karnaughmap@local@testcasetwo@<0 \multiply\@karnaughmap@local@testcasetwo@ by -1\relax\fi
+      \newcount\@cartonaugh@local@testcaseone@\relax
+      \newcount\@cartonaugh@local@testcasetwo@\relax
+      \@cartonaugh@local@testcaseone@=#1\relax
+      \@cartonaugh@local@testcasetwo@=#1\relax
+      \advance\@cartonaugh@local@testcaseone@ by -#2\relax
+      \advance\@cartonaugh@local@testcasetwo@ by -#3\relax
+      \ifnum\@cartonaugh@local@testcaseone@<0 \multiply\@cartonaugh@local@testcaseone@ by -1\relax\fi
+      \ifnum\@cartonaugh@local@testcasetwo@<0 \multiply\@cartonaugh@local@testcasetwo@ by -1\relax\fi
       % test case one
-      \ifnum\@karnaughmap@local@testcaseone@<\@karnaughmap@var@mapsizex@
+      \ifnum\@cartonaugh@local@testcaseone@<\@cartonaugh@var@mapsizex@
         % this is a vertical implicant
-        \renewcommand{\@karnaughmap@local@orientation@}{0}
+        \renewcommand{\@cartonaugh@local@orientation@}{0}
       \else
         % this is a horizontal implicant
-        \renewcommand{\@karnaughmap@local@orientation@}{1}
+        \renewcommand{\@cartonaugh@local@orientation@}{1}
       \fi
       % test case two
-      \ifnum\@karnaughmap@local@testcasetwo@<\@karnaughmap@var@mapsizex@
+      \ifnum\@cartonaugh@local@testcasetwo@<\@cartonaugh@var@mapsizex@
         % this is a vertical implicant
-        \renewcommand{\@karnaughmap@local@orientation@}{1}
+        \renewcommand{\@cartonaugh@local@orientation@}{1}
       \fi
     % [END]}
     % loop through specified sub maps
     \foreach \map in {#5} {%
       % make sure we don't try to draw on non existing sub maps
-      \ifnum\map<\@karnaughmap@var@mapsizez@
+      \ifnum\map<\@cartonaugh@var@mapsizez@
         % loop through both parts of the marking(ie. left and right part)
         \foreach \i in {0,1} {%
           % set parameters depending on the part of the marking(ie. left and right part) {[START]
             \ifnum\i=0
-              \renewcommand{\@karnaughmap@local@coordinateone@}{#1}
-              \renewcommand{\@karnaughmap@local@coordinatetwo@}{#2}
-              \renewcommand{\@karnaughmap@local@mirror@}{1}
+              \renewcommand{\@cartonaugh@local@coordinateone@}{#1}
+              \renewcommand{\@cartonaugh@local@coordinatetwo@}{#2}
+              \renewcommand{\@cartonaugh@local@mirror@}{1}
             \else
-              \renewcommand{\@karnaughmap@local@coordinateone@}{#3}
-              \renewcommand{\@karnaughmap@local@coordinatetwo@}{#4}
-              \renewcommand{\@karnaughmap@local@mirror@}{-1}
+              \renewcommand{\@cartonaugh@local@coordinateone@}{#3}
+              \renewcommand{\@cartonaugh@local@coordinatetwo@}{#4}
+              \renewcommand{\@cartonaugh@local@mirror@}{-1}
             \fi
           % [END]}
           % calculate cell numbers for the specified sub map {[START]
-            \newcount\@karnaughmap@local@coordinateonecounter@\relax
-            \newcount\@karnaughmap@local@coordinatetwocounter@\relax
-            \@karnaughmap@local@coordinateonecounter@=\map\relax
-            \@karnaughmap@local@coordinatetwocounter@=\map\relax
-            \multiply\@karnaughmap@local@coordinateonecounter@ by 16\relax
-            \multiply\@karnaughmap@local@coordinatetwocounter@ by 16\relax
-            \advance\@karnaughmap@local@coordinateonecounter@ by \@karnaughmap@local@coordinateone@\relax
-            \advance\@karnaughmap@local@coordinatetwocounter@ by \@karnaughmap@local@coordinatetwo@\relax
-            \renewcommand{\@karnaughmap@local@coordinateone@}{\@karnaughmap@local@coordinateonecounter@}
-            \renewcommand{\@karnaughmap@local@coordinatetwo@}{\@karnaughmap@local@coordinatetwocounter@}
+            \newcount\@cartonaugh@local@coordinateonecounter@\relax
+            \newcount\@cartonaugh@local@coordinatetwocounter@\relax
+            \@cartonaugh@local@coordinateonecounter@=\map\relax
+            \@cartonaugh@local@coordinatetwocounter@=\map\relax
+            \multiply\@cartonaugh@local@coordinateonecounter@ by 16\relax
+            \multiply\@cartonaugh@local@coordinatetwocounter@ by 16\relax
+            \advance\@cartonaugh@local@coordinateonecounter@ by \@cartonaugh@local@coordinateone@\relax
+            \advance\@cartonaugh@local@coordinatetwocounter@ by \@cartonaugh@local@coordinatetwo@\relax
+            \renewcommand{\@cartonaugh@local@coordinateone@}{\@cartonaugh@local@coordinateonecounter@}
+            \renewcommand{\@cartonaugh@local@coordinatetwo@}{\@cartonaugh@local@coordinatetwocounter@}
           % [END]}
           % select drawing content depending on orientation {[START]
-            \ifnum\@karnaughmap@local@orientation@=0
+            \ifnum\@cartonaugh@local@orientation@=0
               % this is a vertical implicant
-              \renewcommand{\@karnaughmap@local@fillcontent@}{%
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinateone@}.center)+(-.3,.6*\@karnaughmap@local@mirror@)$)
+              \renewcommand{\@cartonaugh@local@fillcontent@}{%
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinateone@}.center)+(-.3,.6*\@cartonaugh@local@mirror@)$)
                 --
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinatetwo@}.center)+(.3,.6*\@karnaughmap@local@mirror@)$)
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinatetwo@}.center)+(.3,.6*\@cartonaugh@local@mirror@)$)
                 { [rounded corners=3pt] --
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinatetwo@}.center)+(.3,-.3*\@karnaughmap@local@mirror@)$) }
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinatetwo@}.center)+(.3,-.3*\@cartonaugh@local@mirror@)$) }
                 { [rounded corners=3pt] --
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinateone@}.center)+(-.3,-.3*\@karnaughmap@local@mirror@)$) }
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinateone@}.center)+(-.3,-.3*\@cartonaugh@local@mirror@)$) }
                 -- cycle
               }
-              \renewcommand{\@karnaughmap@local@bordercontent@}{%
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinatetwo@}.center)+(.3,.6*\@karnaughmap@local@mirror@)$)
+              \renewcommand{\@cartonaugh@local@bordercontent@}{%
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinatetwo@}.center)+(.3,.6*\@cartonaugh@local@mirror@)$)
                 { [rounded corners=3pt] --
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinatetwo@}.center)+(.3,-.3*\@karnaughmap@local@mirror@)$) }
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinatetwo@}.center)+(.3,-.3*\@cartonaugh@local@mirror@)$) }
                 { [rounded corners=3pt] --
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinateone@}.center)+(-.3,-.3*\@karnaughmap@local@mirror@)$) }
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinateone@}.center)+(-.3,-.3*\@cartonaugh@local@mirror@)$) }
                 --
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinateone@}.center)+(-.3,.6*\@karnaughmap@local@mirror@)$)
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinateone@}.center)+(-.3,.6*\@cartonaugh@local@mirror@)$)
               }
             \else
               % this is a horizontal implicant
-              \renewcommand{\@karnaughmap@local@fillcontent@}{%
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinatetwo@}.center)+(-.6*\@karnaughmap@local@mirror@,-.3)$)
+              \renewcommand{\@cartonaugh@local@fillcontent@}{%
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinatetwo@}.center)+(-.6*\@cartonaugh@local@mirror@,-.3)$)
                 --
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinateone@}.center)+(-.6*\@karnaughmap@local@mirror@,.3)$)
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinateone@}.center)+(-.6*\@cartonaugh@local@mirror@,.3)$)
                 { [rounded corners=3pt] --
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinateone@}.center)+(.3*\@karnaughmap@local@mirror@,.3)$) }
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinateone@}.center)+(.3*\@cartonaugh@local@mirror@,.3)$) }
                 { [rounded corners=3pt] --
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinatetwo@}.center)+(.3*\@karnaughmap@local@mirror@,-.3)$) }
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinatetwo@}.center)+(.3*\@cartonaugh@local@mirror@,-.3)$) }
                 -- cycle
               }
-              \renewcommand{\@karnaughmap@local@bordercontent@}{%
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinateone@}.center)+(-.6*\@karnaughmap@local@mirror@,.3)$)
+              \renewcommand{\@cartonaugh@local@bordercontent@}{%
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinateone@}.center)+(-.6*\@cartonaugh@local@mirror@,.3)$)
                 { [rounded corners=3pt] --
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinateone@}.center)+(.3*\@karnaughmap@local@mirror@,.3)$) }
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinateone@}.center)+(.3*\@cartonaugh@local@mirror@,.3)$) }
                 { [rounded corners=3pt] --
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinatetwo@}.center)+(.3*\@karnaughmap@local@mirror@,-.3)$) }
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinatetwo@}.center)+(.3*\@cartonaugh@local@mirror@,-.3)$) }
                 --
-                ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinatetwo@}.center)+(-.6*\@karnaughmap@local@mirror@,-.3)$)
+                ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinatetwo@}.center)+(-.6*\@cartonaugh@local@mirror@,-.3)$)
               }
             \fi
           % [END]}
           % draw
-          % only fill marking when \@karnaughmap@var@bw@ = '0'
-          \ifnum0=\@karnaughmap@var@bw@
+          % only fill marking when \@cartonaugh@var@bw@ = '0'
+          \ifnum0=\@cartonaugh@var@bw@
             \fill[
               sharp corners,
-              fill=\@karnaughmap@func@decimaltocolor@{\@karnaughmap@var@colorindex@},
+              fill=\@cartonaugh@func@decimaltocolor@{\@cartonaugh@var@colorindex@},
               fill opacity=0.25,
             ] {
-              \@karnaughmap@local@fillcontent@%
+              \@cartonaugh@local@fillcontent@%
             };
           \fi
           \draw[
             sharp corners,
             draw opacity=1.0,
           ] {
-            \@karnaughmap@local@bordercontent@%
+            \@cartonaugh@local@bordercontent@%
           };
         }
       \else
-        \PackageWarning{karnaugh-map}{%
+        \PackageWarning{cartonaugh}{%
           You can only draw on existing sub maps.
           Ignoring instruction to draw on non existing sub map number \map%
         }
@@ -393,78 +395,77 @@
     }
   \endgroup
   % mark color as used
-  \advance\@karnaughmap@var@colorindex@ by 1\relax
+  \advance\@cartonaugh@var@colorindex@ by 1\relax
 }
 \DeclareDocumentCommand{\implicantcorner}{O{0}} {%
-  % bail if outside environment karnaugh-map
-  \@karnaughmap@func@bailoutsideenvironment@{}
+  % bail if outside environment cartonaugh
+  \@cartonaugh@func@bailoutsideenvironment@{}
   %
   % make sure "\implicantcorner" only are used on 4x4 maps
-  \ifnum\@karnaughmap@var@mapsizex@\@karnaughmap@var@mapsizey@=44
+  \ifnum\@cartonaugh@var@mapsizex@\@cartonaugh@var@mapsizey@=44
     % loop through specified sub maps
     \foreach \map in {#1} {%
       % make sure we don't try to draw on non existing sub maps
-      \ifnum\map<\@karnaughmap@var@mapsizez@
+      \ifnum\map<\@cartonaugh@var@mapsizez@
         % loop through the four corners
         \foreach \corner in {0,2,8,10} {%
           % calculate corner's properties {[START]
-            \newcount\@karnaughmap@local@coordinate@\relax
-            \@karnaughmap@local@coordinate@=\map\relax
-            \multiply\@karnaughmap@local@coordinate@ by 16\relax
-            \advance\@karnaughmap@local@coordinate@ by \corner\relax
-            \newcommand{\@karnaughmap@local@mirrorx@}{0} % '1' or '-1' to mirror
-            \newcommand{\@karnaughmap@local@mirrory@}{0} % '1' or '-1' to mirror
-            \ifnum\corner=0 \renewcommand{\@karnaughmap@local@mirrorx@}{1}\renewcommand{\@karnaughmap@local@mirrory@}{1}\fi
-            \ifnum\corner=2 \renewcommand{\@karnaughmap@local@mirrorx@}{-1}\renewcommand{\@karnaughmap@local@mirrory@}{1}\fi
-            \ifnum\corner=8 \renewcommand{\@karnaughmap@local@mirrorx@}{1}\renewcommand{\@karnaughmap@local@mirrory@}{-1}\fi
-            \ifnum\corner=10 \renewcommand{\@karnaughmap@local@mirrorx@}{-1}\renewcommand{\@karnaughmap@local@mirrory@}{-1}\fi
+            \newcount\@cartonaugh@local@coordinate@\relax
+            \@cartonaugh@local@coordinate@=\map\relax
+            \multiply\@cartonaugh@local@coordinate@ by 16\relax
+            \advance\@cartonaugh@local@coordinate@ by \corner\relax
+            \newcommand{\@cartonaugh@local@mirrorx@}{0} % '1' or '-1' to mirror
+            \newcommand{\@cartonaugh@local@mirrory@}{0} % '1' or '-1' to mirror
+            \ifnum\corner=0 \renewcommand{\@cartonaugh@local@mirrorx@}{1}\renewcommand{\@cartonaugh@local@mirrory@}{1}\fi
+            \ifnum\corner=2 \renewcommand{\@cartonaugh@local@mirrorx@}{-1}\renewcommand{\@cartonaugh@local@mirrory@}{1}\fi
+            \ifnum\corner=8 \renewcommand{\@cartonaugh@local@mirrorx@}{1}\renewcommand{\@cartonaugh@local@mirrory@}{-1}\fi
+            \ifnum\corner=10 \renewcommand{\@cartonaugh@local@mirrorx@}{-1}\renewcommand{\@cartonaugh@local@mirrory@}{-1}\fi
           % [END]}
           % draw
-          % only fill marking when \@karnaughmap@var@bw@ = '0'
-          \ifnum0=\@karnaughmap@var@bw@
+          % only fill marking when \@cartonaugh@var@bw@ = '0'
+          \ifnum0=\@cartonaugh@var@bw@
             \fill[
               sharp corners,
-              fill=\@karnaughmap@func@decimaltocolor@{\@karnaughmap@var@colorindex@},
+              fill=\@cartonaugh@func@decimaltocolor@{\@cartonaugh@var@colorindex@},
               fill opacity=0.25,
             ]
-            ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinate@}.center)+(-.6*\@karnaughmap@local@mirrorx@,.6*\@karnaughmap@local@mirrory@)$)
+            ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinate@}.center)+(-.6*\@cartonaugh@local@mirrorx@,.6*\@cartonaugh@local@mirrory@)$)
             --
-            ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinate@}.center)+(.3*\@karnaughmap@local@mirrorx@,.6*\@karnaughmap@local@mirrory@)$)
+            ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinate@}.center)+(.3*\@cartonaugh@local@mirrorx@,.6*\@cartonaugh@local@mirrory@)$)
             { [rounded corners=3pt] --
-            ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinate@}.center)+(.3*\@karnaughmap@local@mirrorx@,-.3*\@karnaughmap@local@mirrory@)$) }
+            ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinate@}.center)+(.3*\@cartonaugh@local@mirrorx@,-.3*\@cartonaugh@local@mirrory@)$) }
             --
-            ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinate@}.center)+(-.6*\@karnaughmap@local@mirrorx@,-.3*\@karnaughmap@local@mirrory@)$)
+            ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinate@}.center)+(-.6*\@cartonaugh@local@mirrorx@,-.3*\@cartonaugh@local@mirrory@)$)
             -- cycle;
           \fi
           \draw[
             sharp corners,
             draw opacity=1.0,
           ]
-          ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinate@}.center)+(.3*\@karnaughmap@local@mirrorx@,.6*\@karnaughmap@local@mirrory@)$)
+          ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinate@}.center)+(.3*\@cartonaugh@local@mirrorx@,.6*\@cartonaugh@local@mirrory@)$)
           { [rounded corners=3pt] --
-          ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinate@}.center)+(.3*\@karnaughmap@local@mirrorx@,-.3*\@karnaughmap@local@mirrory@)$) }
+          ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinate@}.center)+(.3*\@cartonaugh@local@mirrorx@,-.3*\@cartonaugh@local@mirrory@)$) }
           --
-          ($(\@karnaughmap@func@decimaltobin@{\@karnaughmap@local@coordinate@}.center)+(-.6*\@karnaughmap@local@mirrorx@,-.3*\@karnaughmap@local@mirrory@)$);
+          ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@coordinate@}.center)+(-.6*\@cartonaugh@local@mirrorx@,-.3*\@cartonaugh@local@mirrory@)$);
         }
       \else
-        \PackageWarning{karnaugh-map}{%
+        \PackageWarning{cartonaugh}{%
           You can only draw on existing sub maps.
           Ignoring instruction to draw on non existing sub map number \map%
         }
       \fi
     }
     % mark color as used
-    \advance\@karnaughmap@var@colorindex@ by 1\relax
+    \advance\@cartonaugh@var@colorindex@ by 1\relax
   \else
     % print error if "\implicantcorner" are used on non 4x4 map
-    \PackageError{karnaugh-map}{%
+    \PackageError{cartonaugh}{%
       \protect\implicantcorner\space can only be used on 4x4 maps%
     }{%
       You are trying to use \protect\implicantcorner\space on non 4x4 map.%
     }
   \fi
 }
-
 \endinput
 %%
 %% End of file `cartonaugh.sty'.

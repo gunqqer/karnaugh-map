@@ -2,12 +2,11 @@ DEBUG_FLAG = 0
 
 -- Function that is used to either print to LaTeX or to the console
 -- Used for debugging mode
-function  localPrint(str)
+function localPrint(str)
     if DEBUG_FLAG==1 then
         print(str)
-    else
-        tex.sprint(str)
     end
+    tex.sprint(str)
 end
 
 -- Function that converts a decimal number to binary
@@ -134,10 +133,18 @@ function decimalToBin(num, numb_bits, return_concat)
             localPrint(string.format("\\node[right] at (%f,%f) {\\small{%s}};", grid_x_loc-0.6, grid_y_loc+0.6, implacant1))
             localPrint(string.format("\\node[left] at (%f,%f) {\\small{%s}};", grid_x_loc-0.3, grid_y_loc+0.3, implacant2))
         end
+        -- Print out the top boolean column header
+        if (is_multitable_seperated == false) or (d < 2) then
+            localPrint(string.format("\\matrix[matrix of nodes, ampersand replacement=\\&, column sep={1cm,between origins}, nodes={align=center,text width=1cm,inner sep=0pt}, anchor=south west, inner sep=0pt, outer sep=0pt] at (%f, %f) {",grid_x_loc,grid_y_loc+0.05))
+            for c=0, column-1, 1 do
+                localPrint(string.format("%s", decimalToGreyBin(c, 2)))
+                if c ~= (column-1) then localPrint("\\&") end
+            end
+            localPrint("\\\\};")
+        end
         -- Print out the matrix
         localPrint(string.format("\\matrix[matrix of nodes, ampersand replacement=\\&, column sep={1cm,between origins}, row sep={1cm,between origins}, nodes={rectangle,draw,minimum height=1cm,align=center,text width=1cm,inner sep=0pt, text height=2ex, text depth=0.5ex, line width=0.015cm}, anchor=north west, inner sep=0pt, outer sep=0pt] at (%f, %f) {%s};",
                                  grid_x_loc, grid_y_loc, generateKMap(row, column, d)
                                  ))
     end
  end
-
