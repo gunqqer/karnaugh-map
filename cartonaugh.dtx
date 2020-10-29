@@ -100,12 +100,9 @@
 %% drawing
 \RequirePackage{tikz}
 \usetikzlibrary{calc,matrix}
-
 %%
 %% Helpers
 %%
-
-\directlua{require("cartonaugh")}
 
 
 %% convert decimal to color
@@ -150,7 +147,6 @@
 %
 % \section{Usage}
 %
-% 
 % \begin{environment}{cartonaugh}
 %    The |cartonaugh| environment is the base for this package, and everything related to this package happens inside an instances of this environment.
 %
@@ -208,7 +204,6 @@
       \renewcommand{\@cartonaugh@var@bw@}{0}%
     }%
     %
-    
     % [END]}
     % test if a matrix template is found or not(aka "\@cartonaugh@local@matrixtemplate@" equals to '0')
 %     \ifnum0=\@karnaughmap@local@matrixtemplate@
@@ -607,7 +602,6 @@
 %
 %    \textbf{Example:}
 %    \DeleteShortVerb{\|}
-
 %    \begin{multicols}{2}
 %      [Implicant around the four most inner cells.]
 %      \begin{verbatim}
@@ -1263,5 +1257,4 @@ function decimalToBin(num, numb_bits, return_concat)
 %\fi
 %</luacode>
 %
-
 \endinput
