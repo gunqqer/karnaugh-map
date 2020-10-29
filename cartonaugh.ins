@@ -4,14 +4,13 @@
 
 \usedir{tex/latex/cartonaugh}
 
-\preamble
-
-This generated file originates from the cartonaugh package!
-
-\endpreamble
-
 % generate sty file
-\generate{\file{cartonaugh.sty}{\from{cartonaugh.dtx}{package}}}
+\generate{
+            \file{cartonaugh.sty}{\from{cartonaugh.dtx}{package}}
+            \usepreamble\empty
+            \usepostamble\empty
+            \file{cartonaugh.lua}{\from{cartonaugh.dtx}{luacode}}
+         }
 
 \Msg{*********************************************************}
 \Msg{*}
