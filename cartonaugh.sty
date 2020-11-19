@@ -51,19 +51,11 @@
 %%
 \directlua{require("cartonaugh")}
 
-%% convert decimal to color
-\newcommand{\@cartonaugh@func@decimaltocolor@}[1]{%
-  \ifnum#1=0 red\fi
-  \ifnum#1=1 green\fi
-  \ifnum#1=2 yellow\fi
-  \ifnum#1=3 cyan\fi
-  \ifnum#1=4 blue\fi
-  \ifnum#1=5 magenta\fi
-  \ifnum#1>5 cyan\fi
-}
-
 %% convert decimal to binary 6-bit
 \newcommand{\@cartonaugh@func@decimaltobin@}[1]{\directlua{tex.sprint(decimalToBin(\the\numexpr(#1)\relax, 6))}}
+
+%% backwards-compatible function that converts a decimal to color from the lua file
+\newcommand{\@cartonaugh@func@decimaltocolor@}[1]{\directlua{tex.sprint(getColor(\the\numexpr(#1)\relax))}}
 
 %% command raises an error if executed outside the cartonaugh environment
 \newcommand{\@cartonaugh@func@bailoutsideenvironment@}[0]{%
@@ -75,6 +67,8 @@
     }
   \fi
 }
+
+\newcommand{\cartonaughSetColorAtIndex}[2]{\directlua{CARTONAUGH_COLORS[\the\numexpr(#1)\relax] = "\luaescapestring{#2}"}}
 
 %% store map size
 \newcommand{\@cartonaugh@var@mapsizex@}{0}
@@ -207,56 +201,22 @@
 
 %% keep track of used colors
 \newcount\@cartonaugh@var@colorindex@\relax
-\@cartonaugh@var@colorindex@=0\relax
+\@cartonaugh@var@colorindex@=1\relax
 
 \DeclareDocumentCommand{\implicant}{m m O{0}} {%
   % bail if outside environment cartonaugh
   \@cartonaugh@func@bailoutsideenvironment@{}
   %
   \begingroup
-    % loop through specified sub maps
-    \foreach \map in {#3} {%
-      % make sure we don't try to draw on non existing sub maps
-      \ifnum\map<\@cartonaugh@var@mapsizez@
-        % calculate cell number for the specified sub maps {[START]
-          \newcount\@cartonaugh@local@northwest@\relax
-          \newcount\@cartonaugh@local@southeast@\relax
-          \@cartonaugh@local@northwest@=\map\relax
-          \@cartonaugh@local@southeast@=\map\relax
-          \multiply\@cartonaugh@local@northwest@ by 16\relax
-          \multiply\@cartonaugh@local@southeast@ by 16\relax
-          \advance\@cartonaugh@local@northwest@ by #1\relax
-          \advance\@cartonaugh@local@southeast@ by #2\relax
-        % [END]}
-        % only fill marking when \@cartonaugh@var@bw@ = '0'
-        \ifnum0=\@cartonaugh@var@bw@
-          \fill[
-            rounded corners=3pt,
-            fill=\@cartonaugh@func@decimaltocolor@{\@cartonaugh@var@colorindex@},
-            fill opacity=0.25,
-          ] {
-            ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@northwest@}.center)+(-0.3,0.3)$)
-            rectangle
-            ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@southeast@}.center)+(0.3,-0.3)$)
-          };
-        \fi
-        \draw[
-          rounded corners=3pt,
-          draw opacity=1.0,
-        ] {
-          ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@northwest@}.center)+(-0.3,0.3)$)
-          rectangle
-          ($(\@cartonaugh@func@decimaltobin@{\@cartonaugh@local@southeast@}.center)+(0.3,-0.3)$)
-        };
-      \else
-        \PackageWarning{cartonaugh}{%
-          You can only draw on existing sub maps.
-          Ignoring instruction to draw on non existing sub map number \map%
+        \directlua{draw_implacant(
+            \the\numexpr(#1)\relax,
+            \the\numexpr(#2)\relax,
+            "\luaescapestring{\detokenize{#3}}",
+            \the\numexpr(\@cartonaugh@var@colorindex@)\relax,
+            \the\numexpr(\@cartonaugh@var@mapsizez@)\relax
+            )
         }
-      \fi
-    }
   \endgroup
-  % mark color as used
   \advance\@cartonaugh@var@colorindex@ by 1\relax
 }
 \DeclareDocumentCommand{\implicantedge}{m m m m O{0}} {%

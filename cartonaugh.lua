@@ -1,5 +1,8 @@
 DEBUG_FLAG = 1
 
+CARTONAUGH_COLORS = {'red', 'green', 'yellow', 'cyan', 'blue', 'magenta', 'cyan'}
+CARTONAUGH_DEFAULT_COLOR = 'black'
+
 -- Function that is used to either print to LaTeX or to the console
 -- Used for debugging mode
 function localPrint(str)
@@ -7,6 +10,15 @@ function localPrint(str)
         print(str)
     end
     tex.sprint(str)
+end
+
+-- Function that takes a string and splits it be delimiter, then returns it back
+-- From https://stackoverflow.com/questions/19262761/lua-need-to-split-at-comma
+function split(source, delimiters)
+    local elements = {}
+    local pattern = '([^'..delimiters..']+)'
+    string.gsub(source, pattern, function(value) elements[#elements + 1] = value;  end);
+    return elements
 end
 
 -- Function that converts a decimal number to binary
@@ -50,6 +62,15 @@ function padString(str, pad_to, pad_with)
         ret = pad_with .. ret
     end
     return ret
+end
+
+function getColor(index)
+    if index <= 0 then return CARTONAUGH_DEFAULT_COLOR end
+    if index <= table.getn(CARTONAUGH_COLORS) then
+        return CARTONAUGH_COLORS[index]
+    else
+        return CARTONAUGH_DEFAULT_COLOR
+    end
 end
 
 -- Function to generate a kmap template
@@ -106,8 +127,8 @@ end
 -- NOTE: Each variable/cell in the k-map is 1cm. This is so that everything alings with each other just be adding
 -- the number of row and column. It's a bit of hack, but for now it will stay this way. Resizing of the matrix
 -- will be done with the scale option in the future
-function draw_pgf_kmap(column, row, grid_numb, var1, var2, var3)
-    grid_numb = grid_numb-1
+function draw_pgf_kmap(column, row, submaps_n, var1, var2, var3)
+    submaps_n = submaps_n-1
     -- TODO: Transform the following settings variables into arguments
     local is_multitable_seperated = true    -- Setting to determine if the graphs are drawn with a sperator line or distanced out
     local graph_seperator = 1.5                -- Seperation lenght between kmaps if is_multitable_seperated=false
@@ -117,7 +138,7 @@ function draw_pgf_kmap(column, row, grid_numb, var1, var2, var3)
     local column_header_numb_bits = ((column-1) // 2)+1
     local row_header_numb_bits = ((row-1) // 2)+1
     if is_multitable_seperated then graph_seperator = 0 end
-    for d=0,grid_numb,1 do
+    for d=0,submaps_n,1 do
         -- Find the top-left corner of each grid (seperated by 1 unit)
         local grid_x_loc = (d % 2)*(column+graph_seperator)
         local grid_y_loc = -(d // 2)*(row+graph_seperator)
@@ -162,17 +183,31 @@ function draw_pgf_kmap(column, row, grid_numb, var1, var2, var3)
                                     grid_x_loc, grid_y_loc, generateKMap(row, column, d)
                                     ))
         -- Print out the buttom text saying which matrix is which
-        if (grid_numb > 0) then
+        if (submaps_n > 0) then
             if (is_multitable_seperated == false) then
                 localPrint(string.format("\\node[below] at (%f, %f) {%s = %s};", grid_x_loc+(column//2),grid_y_loc-row,var3, decimalToBin(d, 2)))
             elseif (is_multitable_seperated == true) then
                 if (d < 2) then
                     localPrint(string.format("\\node[] at (%f, %f) {%s = %s};", grid_x_loc+(column//2), grid_y_loc+1, var3, decimalToBin(d, 2)))
                 end
-                if (d % 2 == 0) and (grid_numb > 2) then
+                if (d % 2 == 0) and (submaps_n > 2) then
                     localPrint(string.format("\\node[rotate=90] at (%f, %f) {%s = %s};", grid_x_loc-1, grid_y_loc-(row//2), var3, decimalToBin(d, 2)))
                 end
             end
+        end
+    end
+end
+
+function draw_implacant(st, en, submaps_str, color_index, max_submaps)
+    st = tonumber(st)
+    en = tonumber(en)
+    local submap_arr = split(submaps_str, ',')
+    for s=1,table.getn(submap_arr),1 do
+        current_submap = tonumber(submap_arr[s])
+        if current_submap < max_submaps then
+            localPrint(string.format("\\fill[rounded corners=3pt,fill=%s,fill opacity=0.25,] {($(%s.center)+(-0.3,0.3)$) rectangle ($(%s.center)+(0.3,-0.3)$)};", getColor(color_index) , decimalToGreyBin(current_submap, 2) .. decimalToBin(st,4), decimalToGreyBin(current_submap, 2) .. decimalToBin(en,4)))
+        else
+            localPrint(string.format("\\PackageWarning{cartonaugh}{You can only draw on existing sub maps. Ignoring instruction to draw on non existing sub map number %d}", s))
         end
     end
 end
