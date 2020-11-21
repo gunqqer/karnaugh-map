@@ -96,10 +96,11 @@
     % [END]}
     % test if a matrix template is found or not(aka "\@cartonaugh@local@matrixtemplate@" equals to '0')
     \begin{tikzpicture}
-        \directlua{draw_pgf_kmap(
-                   \the\numexpr(\@cartonaugh@var@mapsizex@)\relax,
-                   \the\numexpr(\@cartonaugh@var@mapsizey@)\relax,
-                   \the\numexpr(\@cartonaugh@var@mapsizez@)\relax,
+        \directlua{init_cartonaught_env(
+                   \the\numexpr(#2)\relax,
+                   \the\numexpr(#3)\relax,
+                   \the\numexpr(#4)\relax,
+                   \the\numexpr(\@cartonaugh@var@bw@)\relax,
                    "\luaescapestring{\detokenize{#5}}",
                    "\luaescapestring{\detokenize{#6}}",
                    "\luaescapestring{\detokenize{#7}}"
@@ -203,18 +204,27 @@
 \newcount\@cartonaugh@var@colorindex@\relax
 \@cartonaugh@var@colorindex@=1\relax
 
-\DeclareDocumentCommand{\implicant}{m m O{0}} {%
+\DeclareDocumentCommand{\implicant}{m m m m m m} {%
   % bail if outside environment cartonaugh
   \@cartonaugh@func@bailoutsideenvironment@{}
   %
   \begingroup
-        \directlua{draw_implacant(
-            \the\numexpr(#1)\relax,
-            \the\numexpr(#2)\relax,
-            "\luaescapestring{\detokenize{#3}}",
-            \the\numexpr(\@cartonaugh@var@colorindex@)\relax,
-            \the\numexpr(\@cartonaugh@var@mapsizez@)\relax
-            )
+        \directlua{
+%             draw_implacant(
+%                 \the\numexpr(#1)\relax,
+%                 \the\numexpr(#2)\relax,
+%                 "\luaescapestring{\detokenize{#3}}",
+%                 \the\numexpr(\@cartonaugh@var@colorindex@)\relax,
+%                 \the\numexpr(\@cartonaugh@var@mapsizez@)\relax
+%                 )
+            draw_implacant({
+                "\luaescapestring{\detokenize{#1}}",
+                "\luaescapestring{\detokenize{#2}}",
+                "\luaescapestring{\detokenize{#3}}",
+                "\luaescapestring{\detokenize{#4}}",
+                "\luaescapestring{\detokenize{#5}}",
+                "\luaescapestring{\detokenize{#6}}"}
+                )
         }
   \endgroup
   \advance\@cartonaugh@var@colorindex@ by 1\relax

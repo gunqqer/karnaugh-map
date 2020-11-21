@@ -1,7 +1,9 @@
-DEBUG_FLAG = 1
+DEBUG_FLAG = 0
 
 CARTONAUGH_COLORS = {'red', 'green', 'yellow', 'cyan', 'blue', 'magenta', 'cyan'}
 CARTONAUGH_DEFAULT_COLOR = 'black'
+
+cartonaugh_env_settings = {}
 
 -- Function that is used to either print to LaTeX or to the console
 -- Used for debugging mode
@@ -42,17 +44,19 @@ end
 -- Function that converts a decimal number to grey code
 function decimalToGreyBin(num, numb_bits)
     -- Get the binary array
+    num = num ~ (num >> 1)
     local t = decimalToBin(num, numb_bits, false)
-    local tg={}
-    -- Find grey code from binary by XORing the previous bit going from MSB to LSB
-    for b=1,numb_bits,1 do
-        if b == 1 then
-            tg[b] = t[b]
-        else
-            tg[b] = t[b] ~ t[b-1]
-        end
+    return table.concat(t)
+end
+
+function greyBinToDecimal(num)
+--     num = tonumber(num,2)
+    local mask = num
+    while mask > 0 do
+        mask = mask >> 1
+        num = num ~ mask
     end
-    return table.concat(tg)
+    return num
 end
 
 -- Function to pad a string by a amount with b string
@@ -66,7 +70,7 @@ end
 
 function getColor(index)
     if index <= 0 then return CARTONAUGH_DEFAULT_COLOR end
-    if index <= table.getn(CARTONAUGH_COLORS) then
+    if CARTONAUGH_COLORS[index] ~= nil then
         return CARTONAUGH_COLORS[index]
     else
         return CARTONAUGH_DEFAULT_COLOR
@@ -105,10 +109,7 @@ function generateKMap(column, row, grid_numb)
                 elseif c == (column+1) then
 
                 else
-    --                     localPrint("|(" .. "00" ..
-    --                     decimalToGreyBin((c-1), 2) ..
-    --                     decimalToGreyBin((r-1), 2) ..  ")|" .. "\\phantom{0}")
-                    return_str = return_str ..("|(" .. padString((decimalToGreyBin(grid_numb, outside_grid_numb_bits) .. decimalToGreyBin(c-1, outside_column_bits) .. decimalToGreyBin(r-1, outside_row_bits)), 6, 0) ..  ")|" .. "\\phantom{0}")
+                    return_str = return_str ..("|(" .. padString((decimalToGreyBin(grid_numb, outside_grid_numb_bits) .. decimalToGreyBin(r-1, outside_column_bits) .. decimalToGreyBin(c-1, outside_row_bits)), 6, 0) ..  ")|" .. "\\phantom{0}")
                     --TODO: Look into why reversing c and r from where they should be makes it work
                 end
             end
@@ -121,6 +122,24 @@ function generateKMap(column, row, grid_numb)
         end
     end
     return return_str
+end
+
+
+function init_cartonaught_env(numb_cols, numb_row, numb_submaps, is_bw, var12_str, var34_str, var56_str)
+    cartonaugh_env_settings = {
+        cols = numb_cols,
+        rows = numb_row,
+        submaps = numb_submaps,
+        bw = tonumber(is_bw),
+        var_string = {
+                v12 = var12_str,
+                v34 = var34_str,
+                v56 = var56_str,
+        },
+        color_index = 0,
+    }
+    print(is_bw)
+    draw_pgf_kmap(numb_cols, numb_row, numb_submaps, var12_str, var34_str, var56_str)
 end
 
 -- Function to generate the k-maps
@@ -158,8 +177,8 @@ function draw_pgf_kmap(column, row, submaps_n, var1, var2, var3)
         -- Print out the top-left line corner with the variables
         if (is_multitable_seperated == false) or (d==0) then
             localPrint(string.format("\\draw[inner sep=0pt, outer sep=0pt] (%f, %f) -- (%f, %f);", grid_x_loc+line_width, grid_y_loc-line_width, grid_x_loc-zero_var_line_lenght, grid_y_loc+zero_var_line_lenght))
-            localPrint(string.format("\\node[right] at (%f,%f) {\\small{%s}};", grid_x_loc-0.6, grid_y_loc+0.6, var1))
-            localPrint(string.format("\\node[left] at (%f,%f) {\\small{%s}};", grid_x_loc-0.3, grid_y_loc+0.3, var2))
+            localPrint(string.format("\\node[left] at (%f,%f) {\\small{%s}};", grid_x_loc-0.3, grid_y_loc+0.3, var1))
+            localPrint(string.format("\\node[right] at (%f,%f) {\\small{%s}};", grid_x_loc-0.6, grid_y_loc+0.6, var2))
         end
         -- Print out the top boolean column header
         if (is_multitable_seperated == false) or (d < 2) then
@@ -198,16 +217,66 @@ function draw_pgf_kmap(column, row, submaps_n, var1, var2, var3)
     end
 end
 
-function draw_implacant(st, en, submaps_str, color_index, max_submaps)
+function manual_draw_implacant(st, en, submaps_str, color_index, max_submaps)
     st = tonumber(st)
     en = tonumber(en)
     local submap_arr = split(submaps_str, ',')
+    --     Check if the implacent selection     
     for s=1,table.getn(submap_arr),1 do
         current_submap = tonumber(submap_arr[s])
         if current_submap < max_submaps then
             localPrint(string.format("\\fill[rounded corners=3pt,fill=%s,fill opacity=0.25,] {($(%s.center)+(-0.3,0.3)$) rectangle ($(%s.center)+(0.3,-0.3)$)};", getColor(color_index) , decimalToGreyBin(current_submap, 2) .. decimalToBin(st,4), decimalToGreyBin(current_submap, 2) .. decimalToBin(en,4)))
+            localPrint(string.format("\\draw[rounded corners=3pt,draw opacity=1.0,] {($(%s.center)+(-0.3,0.3)$)rectangle($(%s.center)+(0.3,-0.3)$)};", decimalToGreyBin(current_submap, 2) .. decimalToBin(st,4), decimalToGreyBin(current_submap, 2) .. decimalToBin(en,4)))
         else
             localPrint(string.format("\\PackageWarning{cartonaugh}{You can only draw on existing sub maps. Ignoring instruction to draw on non existing sub map number %d}", s))
         end
     end
+end
+
+function draw_implacant(var_list)
+--     local var_list_arr = split(var_list, ',')
+    local color_index = cartonaugh_env_settings.color_index
+    local max_submaps = cartonaugh_env_settings.submaps
+    
+    -- Check argument for submaps greater than 1
+    -- TODO: before returning print out a package error
+    if max_submaps > 1 then
+        for s=0,max_submaps-1,1 do
+            if var_list[5+s] == '' then
+                -- TODO: Fix this
+                localPrint(string.format("\\PackageWarning{cartonaugh}{Please feed either 1, 0, or x for sub map number %d's variable boolean}", s+1))
+                return 
+            end 
+        end
+    end
+    
+    local low_limit = 0 local high_limit = 0
+    
+    for b=1,4,1 do
+        if var_list[b] == 'x' and b==4 then
+            if greyBinToDecimal(high_limit) < greyBinToDecimal(high_limit | (1 << (b-1))) then
+                high_limit = high_limit | (1 << (b-1))
+            end
+        elseif var_list[b] == '1' then
+            high_limit = high_limit | (1 << (b-1))
+            low_limit = low_limit | (1 << (b-1))
+        end
+    end
+    
+    local st = decimalToBin(low_limit,4)
+    local en = decimalToBin(high_limit,4)
+    
+    for s=1,1,1 do
+        current_submap = 0
+        if current_submap < max_submaps then
+            if cartonaugh_env_settings.bw == 0 then
+                localPrint(string.format("\\fill[rounded corners=3pt,fill=%s,fill opacity=0.25,] {($(%s.center)+(-0.3,0.3)$) rectangle ($(%s.center)+(0.3,-0.3)$)};", getColor(color_index) , decimalToGreyBin(current_submap, 2) .. st, decimalToGreyBin(current_submap, 2) .. en))
+                color_index = color_index+1
+            end
+            localPrint(string.format("\\draw[rounded corners=3pt,draw opacity=1.0,] {($(%s.center)+(-0.3,0.3)$)rectangle($(%s.center)+(0.3,-0.3)$)};", decimalToGreyBin(current_submap, 2) .. st, decimalToGreyBin(current_submap, 2) .. en))
+        else
+            localPrint(string.format("\\PackageWarning{cartonaugh}{You can only draw on existing sub maps. Ignoring instruction to draw on non existing sub map number %d}", s))
+        end
+    end
+    cartonaugh_env_settings.color_index = color_index
 end
